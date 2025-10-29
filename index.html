@@ -233,7 +233,7 @@
             console.log(`Frontend: Meminta QRIS untuk Rp${amount}`);
 
             // Ganti 'http://localhost:3000' jika server Anda ada di domain lain
-            const response = await fetch("http://localhost:3000/api/create-qris", {
+            const response = await fetch("https://test-gotp.vercel.app/api/create-qris", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
