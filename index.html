@@ -55,7 +55,7 @@
         .nav-item.active { color: #3A79FF; }
         .nav-item .icon { font-size: 1.6rem; margin-bottom: 4px; }
 
-        /* === [MODIFIKASI] Modal CSS dengan Animasi === */
+        /* === Modal CSS dengan Animasi === */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -64,23 +64,18 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
-            display: flex; /* Selalu flex, biarkan opacity & visibility mengontrol */
+            display: flex; 
             justify-content: center;
             align-items: center;
             z-index: 1000;
-
-            /* [BARU] Transisi untuk fade background */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-
-        /* [BARU] Status saat modal terlihat */
         .modal-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
-
         .modal-content {
             background: #1E2A47;
             padding: 25px;
@@ -89,20 +84,14 @@
             max-width: 350px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-
-            /* [BARU] Transisi untuk popup box (zoom & fade) */
             opacity: 0;
             transform: scale(0.9) translateY(10px);
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
-
-        /* [BARU] Status box saat modal terlihat */
         .modal-overlay.visible .modal-content {
             opacity: 1;
             transform: scale(1) translateY(0);
         }
-
-        /* ... (CSS modal lainnya tetap sama) ... */
         .modal-content h4 { font-size: 1.2rem; margin-bottom: 15px; color: #FFFFFF; }
         .modal-input { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #3A79FF; background: #121829; color: white; border-radius: 10px; margin-bottom: 15px; text-align: center; }
         .modal-btn { width: 100%; padding: 12px; font-size: 1rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; }
@@ -112,10 +101,32 @@
         #qris-image { width: 100%; height: 100%; object-fit: contain; }
         #countdown-timer { font-size: 1.5rem; font-weight: 700; color: #FFD700; margin: 10px 0; }
         #step-2-qris { display: none; }
+
+        /* CSS untuk Tampilan Sukses */
+        #step-3-success {
+            display: none; /* Sembunyi by default */
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        #success-icon {
+            font-size: 5rem;
+            color: #22c55e; /* Hijau sukses */
+        }
+        #step-3-success h4 {
+            font-size: 1.3rem;
+            color: #22c55e;
+            margin-top: 15px;
+        }
+        #step-3-success p {
+            font-size: 0.9rem;
+            color: #A0AEC0;
+            margin-top: 5px;
+        }
+
     </style>
 </head>
 <body>
-
     <header class="header">
         <div class="user-info">
             <img src="https://placehold.co/50x50/3A79FF/FFFFFF/png?text=A" alt="Avatar" class="avatar">
@@ -150,12 +161,14 @@
 
     <div id="deposit-modal" class="modal-overlay">
         <div class="modal-content">
+            
             <div id="step-1-amount">
                 <h4>Buat Deposit</h4>
                 <input type="number" id="input-amount" class="modal-input" placeholder="Masukkan nominal, cth: 10000">
                 <button id="btn-lanjut" class="modal-btn modal-btn-primary">Lanjut</button>
                 <button id="btn-batal-1" class="modal-btn modal-btn-secondary">Batal</button>
             </div>
+            
             <div id="step-2-qris">
                 <h4>Scan QRIS untuk Pembayaran</h4>
                 <div id="qris-image-container">
@@ -165,6 +178,14 @@
                 <p>Silakan selesaikan pembayaran dalam 15 menit.</p>
                 <button id="btn-batal-2" class="modal-btn modal-btn-secondary">Tutup</button>
             </div>
+
+            <div id="step-3-success">
+                <i id="success-icon" class="bi bi-check-circle-fill"></i>
+                <h4>Pembayaran Berhasil!</h4>
+                <p>Saldo Anda akan segera diperbarui.</p>
+                <button id="btn-tutup-sukses" class="modal-btn modal-btn-primary">Selesai</button>
+            </div>
+
         </div>
     </div>
 
@@ -178,29 +199,33 @@
         const btnBatal2 = document.getElementById('btn-batal-2');
         const step1 = document.getElementById('step-1-amount');
         const step2 = document.getElementById('step-2-qris');
+        const step3 = document.getElementById('step-3-success');
+        const btnTutupSukses = document.getElementById('btn-tutup-sukses');
         const inputAmount = document.getElementById('input-amount');
         const qrisImage = document.getElementById('qris-image');
         const countdownTimer = document.getElementById('countdown-timer');
+        
         let countdownInterval;
+        let monitorInterval; 
 
         // Tampilkan modal
         btnTopUp.onclick = function() {
             step1.style.display = 'block';
             step2.style.display = 'none';
+            step3.style.display = 'none'; 
             inputAmount.value = '';
-            
-            /* [MODIFIKASI] Ganti display:flex menjadi add class */
             modal.classList.add('visible');
         }
 
         // Sembunyikan modal
         function hideModal() {
-            /* [MODIFIKASI] Ganti display:none menjadi remove class */
             modal.classList.remove('visible');
             clearInterval(countdownInterval);
+            clearInterval(monitorInterval); 
         }
         btnBatal1.onclick = hideModal;
         btnBatal2.onclick = hideModal;
+        btnTutupSukses.onclick = hideModal;
 
         // Tombol "Lanjut"
         btnLanjut.onclick = async function() {
@@ -211,7 +236,9 @@
             }
 
             step1.style.display = 'none';
-            step2.style.display = 'block';
+            step2.style.display = 'block'; 
+            step3.style.display = 'none';
+            
             qrisImage.src = ''; 
             countdownTimer.textContent = 'Memuat...';
 
@@ -219,11 +246,14 @@
                 // Panggil backend Anda
                 const response = await panggilBackendAsli(amount); 
                 
-                qrisImage.src = response.qrUrl; // URL QR dari backend
+                qrisImage.src = response.qrUrl; 
                 startCountdown(15 * 60); 
 
+                // Mulai monitor status pembayaran
+                startPaymentMonitor(response.transactionId);
+
             } catch (error) {
-                alert(error.message); // Tampilkan pesan error
+                alert(error.message); 
                 hideModal();
             }
         }
@@ -232,45 +262,87 @@
         async function panggilBackendAsli(amount) {
             console.log(`Frontend: Meminta QRIS untuk Rp${amount}`);
 
-            // Ganti 'http://localhost:3000' jika server Anda ada di domain lain
-            const response = await fetch("https://test-gotp.vercel.app/api/create-qris", {
+            // --- [FIX] Ganti URL ke path relatif untuk Vercel ---
+            const response = await fetch("/api/create-qris", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ amount: amount }) // Kirim amount ke backend
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: amount })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Gagal terhubung ke server');
             }
-
-            const data = await response.json();
-            console.log("Frontend: Menerima data asli dari backend", data);
-            return data; // Ini akan berisi { qrUrl: "...", transactionId: "..." }
+            return await response.json(); // Mengembalikan { qrUrl, transactionId }
         }
 
         // Fungsi countdown
         function startCountdown(duration) {
             let timer = duration;
             clearInterval(countdownInterval); 
-
             countdownInterval = setInterval(function () {
                 let minutes = parseInt(timer / 60, 10);
                 let seconds = parseInt(timer % 60, 10);
                 minutes = minutes < 10 ? "0" + minutes : minutes;
                 seconds = seconds < 10 ? "0" + seconds : seconds;
                 countdownTimer.textContent = minutes + ":" + seconds;
-
                 if (--timer < 0) {
                     clearInterval(countdownInterval);
+                    clearInterval(monitorInterval); 
                     countdownTimer.textContent = "Waktu Habis";
                     alert("Waktu pembayaran telah habis!");
                     hideModal();
                 }
             }, 1000);
         }
+
+        // Fungsi untuk monitor pembayaran
+        function startPaymentMonitor(transactionId) {
+            clearInterval(monitorInterval); 
+            console.log("Mulai memonitor transaksi:", transactionId);
+
+            monitorInterval = setInterval(async () => {
+                try {
+                    // --- [FIX] Ganti URL ke path relatif untuk Vercel ---
+                    const response = await fetch("/api/check-status", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ transactionId })
+                    });
+                    
+                    const data = await response.json();
+                    console.log("Status Cek:", data.status);
+
+                    if (data.status === "paid") {
+                        // --- SUKSES ---
+                        console.log("PEMBAYARAN BERHASIL!");
+                        clearInterval(monitorInterval); 
+                        clearInterval(countdownInterval); 
+                        showSuccessStep(); 
+                    
+                    } else if (data.status === "expired" || data.status === "cancelled") {
+                        // --- GAGAL/KADALUARSA ---
+                        console.log("Transaksi dibatalkan atau kadaluarsa.");
+                        clearInterval(monitorInterval);
+                        clearInterval(countdownInterval);
+                        alert("Transaksi telah dibatalkan atau kadaluarsa.");
+                        hideModal();
+                    }
+                    // Jika status "pending", biarkan interval berjalan lagi
+
+                } catch (err) {
+                    console.error("Error saat cek status:", err.message);
+                }
+            }, 7000); // Cek setiap 7 detik
+        }
+        
+        // Fungsi untuk menampilkan UI sukses
+        function showSuccessStep() {
+            step1.style.display = 'none';
+            step2.style.display = 'none';
+            step3.style.display = 'flex'; // Tampilkan step 3
+        }
+
     </script>
 
 </body>
