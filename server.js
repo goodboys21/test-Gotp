@@ -57,6 +57,34 @@ app.post("/api/create-qris", async (req, res) => {
   }
 });
 
+app.post("/api/check-status", async (req, res) => {
+  try {
+    // Ambil transactionId yang dikirim dari frontend
+    const { transactionId } = req.body;
+
+    if (!transactionId) {
+      return res.status(400).json({ error: "transactionId diperlukan" });
+    }
+
+    // Panggil API Cek Status Cashify
+    const { data } = await axios.post(
+      "https://cashify.my.id/api/generate/check-status",
+      { transactionId }, // Kirim ID transaksinya
+      { headers: { "x-license-key": CASHIFY_KEY, "content-type": "application/json" } }
+    );
+
+    // Kirim statusnya (mis: "pending", "paid", "expired") kembali ke frontend
+    res.json({
+      status: data.data.status 
+    });
+
+  } catch (err) {
+    // Jika transaksi belum ditemukan atau error, kirim status 'pending'
+    console.log("Error cek status (atau trx masih pending):", err.message);
+    res.json({ status: "pending" });
+  }
+});
+
 // Jalankan server
 app.listen(port, () => {
   console.log(`Server berjalan di port ${port}`);
